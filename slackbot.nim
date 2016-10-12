@@ -1,6 +1,6 @@
 import httpclient
 import json
-import strtabs 
+import strtabs, strutils
 import parseopt2
 import parsecfg
 import os
@@ -8,6 +8,7 @@ import os
 var slack_url: string
 var channel: string
 var text: string
+var token: string
 
 var config_file_path = getConfigDir() & "slackbot.conf"
 
@@ -15,6 +16,7 @@ try:
   let config = loadConfig(config_file_path)
   slack_url = config.getSectionValue("", "webhook_url")
   channel = config.getSectionValue("", "default_channel")
+  token = config.getSectionValue("", "token")
 except IOError: echo "Can't read the config file"
 
 if slack_url == nil: quit "webhook_url was not set in slackbot.conf"
@@ -38,11 +40,14 @@ for kind, key, val in get_opt():
 let client = newHttpClient()
 client.headers = newHttpHeaders({ "Content-Type": "application/json" })
 
-let body = %*{
-    "channel": channel,
-    "text": text,
-    "username": "the terminator",
-    "icon_emoji": ":robot_face:"
-}
+let api_url = "https://slack.com/api/"
+let params = "pretty=true&token=$#" % token
 
-echo client.request(httpMethod = HttpPost, url = slack_url, body = $body)
+let api_method = "channels.create"
+let method_params = "name=$#" % [channel]
+# let api_method = "chat.postMessage"
+# let method_params = "as_use=true&channel=$#&text=$#" % [channel, text]
+
+let url = api_url & api_method & "?" & params & "&" & method_params 
+
+echo client.request(url)
