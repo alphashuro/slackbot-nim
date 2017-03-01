@@ -1,6 +1,6 @@
 import httpclient
 import json
-import strtabs 
+import strtabs
 import parseopt2
 import parsecfg
 import os
